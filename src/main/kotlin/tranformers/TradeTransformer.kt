@@ -8,7 +8,7 @@ object TradeTransformer : AbstractTradeTransformer() {
 
     private const val directionLength = 1
     private const val commentLength = 32
-    private val directionsMap = mapOf<String, Direction>(Pair("B", Direction.BUY), Pair("S", Direction.SELL))
+    private val directionsMap = mapOf(Pair("B", Direction.BUY), Pair("S", Direction.SELL))
     private const val requiredInputLength = dateTimeLength + directionLength + itemIDLength + priceLength + quantityLength + firmIDLength * 2 + commentLength
 
     lateinit var comment: String
@@ -36,7 +36,7 @@ object TradeTransformer : AbstractTradeTransformer() {
         validateSeller(input.substring(index, index + firmIDLength))
         index += firmIDLength
         validateComment(input.substring(index, index + commentLength))
-        return Trade(direction, dateTime, itemID, price, qantity, buyer, seller, comment)
+        return Trade(direction, dateTime, itemID, price, quantity, buyer, seller, comment)
     }
 
     override fun validateLength(input: String) {

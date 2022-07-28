@@ -1,7 +1,7 @@
-import formats.Tag
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVPrinter
 import structures.*
+import utils.FormatUtils
 import java.io.FileWriter
 import java.io.IOException
 
@@ -11,7 +11,7 @@ class Printer {
     companion object {
         fun printData(path: String, data: Data) {
             try {
-                CSVPrinter(FileWriter(path), CSVFormat.EXCEL.withNullString("N/A")).use { printer ->
+                CSVPrinter(FileWriter(path), CSVFormat.EXCEL.builder().setCommentMarker('/').setNullString("N/A").build()).use { printer ->
                     val header = data.header
                     printHeader(printer, header)
                     printer.println()
@@ -36,13 +36,13 @@ class Printer {
 
         private fun printTrades(printer: CSVPrinter, trades: List<AbstractTrade>) {
             printer.printComment("TRADES")
-            printer.printRecord("Direction", "Trade date and time", "Item ID", "Price", "Quantity", "Total value", "Buyer", "Seller", "Comment", "Nested parameters")
+            printer.printRecord("Type", "Direction", "Trade date and time", "Item ID", "Price", "Quantity", "Total value", "Buyer", "Seller", "Comment", "Nested parameters")
             for (trade in trades) {
                 when (trade) {
                     is Trade ->
-                        printer.printRecord(trade.direction, trade.dateTime, trade.itemID, trade.price, trade.quantity, trade.value, trade.buyer, trade.seller, trade.comment, null)
+                        printer.printRecord("TRADE", trade.direction, trade.dateTime, trade.itemID, trade.price, trade.quantity, trade.value, trade.buyer, trade.seller, trade.comment, null)
                     is ExtendedTrade ->
-                        printer.printRecord(trade.direction, trade.dateTime, trade.itemID, trade.price, trade.quantity, trade.value, trade.buyer, trade.seller, null, prettyTags(trade.nestedParameters))
+                        printer.printRecord("EXTRD(${trade.version.number})", trade.direction, trade.dateTime, trade.itemID, trade.price, trade.quantity, trade.value, trade.buyer, trade.seller, null, FormatUtils.getPrettyStringFromTags(trade.nestedParameters))
                 }
             }
         }
@@ -52,31 +52,6 @@ class Printer {
             printer.printRecord("Number of TRADE and EXTRD structures", "Number of characters in TRADE and EXTRD structures")
             printer.printRecord(footer.tradeCount, footer.tradesCharsCount)
         }
-
-        private fun prettyTags(tags: List<Tag>): String {
-            val prettyTagsStrings = mutableListOf<String>()
-            tags.forEach{
-                prettyTagsStrings.add(prettyTag(it, 0))
-            }
-            var result = ""
-            prettyTagsStrings.forEach {
-                result += it
-            }
-            return result
-        }
-
-        private fun prettyTag(tag: Tag, offSet: Int): String {
-            if (tag.innerTags.isEmpty()) {
-                return "${"".padStart(offSet)}${tag.value}\n"
-            }
-            var result = "${"".padStart(offSet)}${tag.value}:\n"
-            tag.innerTags.forEach{
-                result += prettyTag(it, offSet + 4)
-            }
-            return result
-        }
-
     }
-
 
 }

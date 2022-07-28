@@ -16,7 +16,7 @@ object HeaderTransformer : Transformer<Header> {
 
     override fun getFromString(input: String): Header {
         validateLength(input)
-        var index = 0;
+        var index = 0
         validateVersion(input.substring(index, index + versionLength))
         index += versionLength
         validateDateTime(input.substring(index, index + dateTimeLength))
@@ -35,10 +35,9 @@ object HeaderTransformer : Transformer<Header> {
     }
 
     private fun validateVersion(version : String) {
-        require(!version.startsWith('+') && !version.startsWith('-')) {"File version \"$version\" doesn't match the required format: U(4)"}
-        val versionNumber = version.toIntOrNull()
+        val versionNumber = FormatUtils.getLongFromString(version, false)
         requireNotNull(versionNumber) {"File version \"$version\" doesn't match the required format: U(4)"}
-        val tempVersion = Version.getByNumber(versionNumber)
+        val tempVersion = Version.getByNumber(versionNumber.toInt())
         requireNotNull(tempVersion) {"Unsupported file version \"$version\", supported versions: ${Version.values().contentToString()}"}
         this.version = tempVersion
     }

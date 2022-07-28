@@ -1,13 +1,12 @@
 import java.io.File
 
 fun main(args: Array<String>) {
-    println("Enter *.dat source file path")
-    val sourcePath = readLine()!!
-
+    require(args.size == 1) {"The tool supports only one argument = path to source *.dat file"}
+    val sourcePath = args.first()
     val data = Extractor.extractData(sourcePath)
+    println("Trades records are successfully extracted from source file")
     data.sortTrades()
-
     val outputPath = "output/${File(sourcePath).name.replace(".dat", ".csv")}"
     Printer.printData(outputPath, data)
-    println("Successfully extracted trades from $sourcePath and loaded sorted data into $outputPath")
+    println("Trades are loaded into $outputPath")
 }

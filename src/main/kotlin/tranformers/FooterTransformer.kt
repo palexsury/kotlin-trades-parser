@@ -2,11 +2,12 @@ package tranformers
 
 import structures.Footer
 import structures.Header.Version
+import utils.FormatUtils
 
 class FooterTransformer(
     private val version: Version,
-    private val verifiedTradesCount: Int,
-    private val verifiedRTradesCharsCount: Int?
+    private val verifiedTradesCount: Long,
+    private val verifiedRTradesCharsCount: Long?
     ) : Transformer<Footer> {
 
     companion object {
@@ -17,7 +18,7 @@ class FooterTransformer(
 
     override fun getFromString(input: String): Footer {
         validateLength(input)
-        var index = 0;
+        var index = 0
         validateTradesCount(input.substring(index, index + tradesCountLength))
         index += tradesCountLength
         return if (version.number < 5) {
@@ -36,16 +37,14 @@ class FooterTransformer(
     }
 
     private fun validateTradesCount(input: String) {
-        require(!input.startsWith('+') && !input.startsWith('-')) {"Number of TRADE and EXTRD structures \"$input\" doesn't match the required format: U(10)"}
-        val tradeCount = input.toIntOrNull()
+        val tradeCount = FormatUtils.getLongFromString(input, false)
         requireNotNull(tradeCount) {"Number of TRADE and EXTRD structures \"$input\" doesn't match the required format: U(10)"}
         require(verifiedTradesCount == tradeCount) {"Number of TRADE and EXTRD structures \"$tradeCount\" not equal verified value \"$verifiedTradesCount\""}
     }
 
     private fun validateTradesCharsCount(input: String) {
-        require(!input.startsWith('+') && !input.startsWith('-')) {"Number of characters in TRADE and EXTRD structures \"$input\" doesn't match the required format: U(10)"}
-        val tradeCharsCount = input.toIntOrNull()
-        requireNotNull(tradeCharsCount) {"Number of characters in TRADE and EXTRD structures \"$input\" doesn't match the required format: U(10)"}
+        val tradeCharsCount = FormatUtils.getLongFromString(input, false)
+        requireNotNull(tradeCharsCount) {"Number of TRADE and EXTRD structures \"$input\" doesn't match the required format: U(10)"}
         require(verifiedRTradesCharsCount == tradeCharsCount) {"Number of characters in TRADE and EXTRD structures \"$tradeCharsCount\" not equal verified value \"$verifiedRTradesCharsCount\""}
     }
 

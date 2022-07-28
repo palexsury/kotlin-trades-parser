@@ -3,8 +3,9 @@ package tranformers
 import structures.AbstractTrade
 import utils.FormatUtils
 import java.math.BigDecimal
-import java.math.BigInteger
+import java.math.BigDecimal.ZERO
 import java.time.LocalDateTime
+
 
 abstract class AbstractTradeTransformer : Transformer<AbstractTrade> {
 
@@ -13,15 +14,17 @@ abstract class AbstractTradeTransformer : Transformer<AbstractTrade> {
         const val itemIDLength = 12
         const val priceLength = 15
         const val priceScale = 4
-        const val quantityLength = 10
+        const val quantityLength = 11
         const val firmIDLength = 4
+        val itemIDRegex = "[A-Z]{3}[A-Z0-9]{9}".toRegex()
+        val firmIDRegex = "[A-Z0-9a-z_]{4}".toRegex()
     }
 
     lateinit var dateTime: LocalDateTime
     lateinit var direction: AbstractTrade.Direction
     lateinit var itemID: String
-    var price: Double = 0.0
-    var qantity: Int = 0
+    var price: BigDecimal = ZERO
+    var quantity: Long = 0
 
     lateinit var buyer: String
     lateinit var seller: String
@@ -35,41 +38,29 @@ abstract class AbstractTradeTransformer : Transformer<AbstractTrade> {
     }
 
     protected fun validateItemID(itemID: String) {
-        require("[A-Z]{3}[A-Z,0-9]{9}".toRegex().matches(itemID)) {"Item ID \"$itemID\" doesn't match the required format: \"[A-Z]{3}[A-Z,0-9]{9}\""}
+        require(itemIDRegex.matches(itemID)) {"Item ID \"$itemID\" doesn't match the required format: \"$itemIDRegex\""}
         this.itemID = itemID
     }
 
     protected fun validatePrice(price: String) {
-        require(price.startsWith('-') || price.startsWith('+')) {"Price \"$price\" doesn't math the required format: Decimal(15:4) - first character must be occupied by sign(+ or -)"}
-        val result: Double?
-        try {
-            result = BigDecimal(BigInteger(price), priceScale).toDouble()
-        } catch (e: java.lang.NumberFormatException) {
-            throw IllegalArgumentException("Price \"$price\" doesn't math the required format: Decimal(15:4)")
-        }
-        this.price = result
+        val tempPrice = FormatUtils.getDecimalFromString(price, priceScale, true)
+        requireNotNull(tempPrice) {"Price \"$price\" doesn't match the required format: Decimal(15:4)"}
+        this.price = tempPrice
     }
 
     protected fun validateQuantity(quantity: String) {
-        require(quantity.startsWith('+') || quantity.startsWith(('-'))) {"Quantity \"$quantity\" doesn't math the required format: Integer(S:10)"}
-        val result: Int?
-        try {
-            result = BigInteger(quantity).toInt()
-        } catch (e: java.lang.NumberFormatException) {
-            throw IllegalArgumentException("Quantity \"$quantity\" doesn't math the required format: Integer(S:10)")
-        }
-        if (result <=0 ) {
-            throw IllegalArgumentException("Quantity \"$quantity\" is zero ot negative")
-        }
-        this.qantity = result
+        val tempQuantity = FormatUtils.getLongFromString(quantity, true)
+        requireNotNull(tempQuantity) {"Quantity \"$quantity\" doesn't match the required format: Integer(S:10)"}
+        require(tempQuantity > 0) {"Quantity \"$quantity\" is zero ot negative"}
+        this.quantity = tempQuantity
     }
 
     private fun validateFirmID(firmID: String) {
-        require("[A-Z,0-9,a-z_]{4}".toRegex().matches(firmID)) {"Firm ID \"$firmID\" doesn't match the required format: \"[A-Z,0-9,_]{4}\""}
+        require(firmIDRegex.matches(firmID)) {"Firm ID \"$firmID\" doesn't match the required format: \"$firmIDRegex\""}
     }
 
     protected fun validateBuyer(buyer: String) {
-        validateFirmID(buyer);
+        validateFirmID(buyer)
         this.buyer = buyer
     }
 

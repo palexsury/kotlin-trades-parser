@@ -1,13 +1,14 @@
 package structures
 
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 data class Trade(
     override val direction: Direction,
     override val dateTime: LocalDateTime,
     override val itemID: String,
-    override val price: Double,
-    override val quantity: Int,
+    override val price: BigDecimal,
+    override val quantity: Long,
     override val buyer: String,
     override val seller: String,
     val comment: String
